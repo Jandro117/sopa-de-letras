@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sopa de Letras Prueba 3</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f0f2f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      color: #333;
+      position: relative;
+    }
+
+    #integrantes {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      font-size: 0.9em;
+    }
+
+    #start-screen, #game-screen, #win-screen, #next-sopa-screen {
+      text-align: center;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+    }
+
+    #start-screen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #game-screen {
+      display: none;
+    }
+
+    #win-screen {
+      display: none;
+    }
+
+    #next-sopa-screen {
+      display: none;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      border: none;
+      border-radius: 6px;
+      background-color: #3498db;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 5px;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    button:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+    }
+
+    #grid-container {
+      display: flex;
+      justify-content: center;
+      margin: 20px auto;
+    }
+
+    #grid {
+      display: grid;
+      gap: 2px;
+      user-select: none;
+      border: 2px solid #bdc3c7;
+      background: #fff;
+      padding: 5px;
+      border-radius: 5px;
+      justify-content: center;
+    }
+
+    .cell {
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.5em;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background-color 0.3s;
+      background-color: #ecf0f1;
+    }
+
+    .cell.selected {
+      background-color: #87cefa;
+      color: #000;
+    }
+
+    .cell.found {
+      background-color: #2ecc71;
+      color: white;
+      cursor: default;
+    }
+
+    #words {
+      margin: 10px auto;
+      max-width: 500px;
+    }
+
+    #words ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    #words li {
+      background: #bdc3c7;
+      padding: 6px 10px;
+      border-radius: 12px;
+      font-weight: bold;
+      user-select: none;
+    }
+
+    #words li.found {
+      background: #2ecc71;
+      color: white;
+      text-decoration: line-through;
+    }
+
+    #message, #timer, #coins {
+      font-size: 1.2em;
+      margin: 10px;
+      color: #2c3e50;
+    }
+
+    #timer-display {
+      font-weight: bold;
+      color: #e74c3c;
+    }
+
+    #time-added {
+      color: #2ecc71;
+      font-weight: bold;
+      display: inline;
+      margin-left: 5px;
+    }
+
+    #powers {
+      margin: 10px auto;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    #back-to-menu {
+      background-color: #e74c3c;
+    }
+
+    #back-to-menu:hover {
+      background-color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <div id="integrantes">
+    <p>Integrantes:</p>
+    <p>Alejandro González</p>
+    <p>Diego González</p>
+    <p>Rafaella Aguirre</p>
+  </div>
+
+  <div id="start-screen">
+    <h1>Sopa de Letras Prueba 3</h1>
+    <div>
+      <h2>Selecciona la dificultad:</h2>
+      <button id="easyBtn">Fácil</button>
+      <button id="mediumBtn">Medio</button>
+      <button id="hardBtn">Difícil</button>
+    </div>
+    <div>
+      <h2>Modo de Juego:</h2>
+      <button id="timedModeBtn">Modo Contrarreloj</button>
+      <button id="blindModeBtn">Modo Ciego / Memoria</button>
+    </div>
+  </div>
+
+  <div id="next-sopa-screen">
+    <h2>¡Siguiente Sopa de Letras!</h2>
+  </div>
+
+  <div id="game-screen">
+    <h1>Sopa de Letras</h1>
+    <div id="coins">Monedas: <span id="coin-count">0</span></div>
+    <div id="timer">Tiempo: <span id="timer-display">60</span><span id="time-added"></span></div>
+    <div id="words">
+      <strong>Palabras a encontrar:</strong>
+      <ul id="word-list"></ul>
+    </div>
+    <div id="grid-container">
+      <div id="grid"></div>
+    </div>
+    <div id="powers">
+      <button id="revealLetterBtn">Revelar Letra (10 monedas)</button>
+      <button id="hintBtn">Pista de Palabra (15 monedas)</button>
+    </div>
+    <button id="resetBtn">Reiniciar Sopa</button>
+    <button id="back-to-menu">Volver al Menú</button>
+    <div id="message"></div>
+  </div>
+
+  <div id="win-screen">
+    <h1>¡Felicidades!</h1>
+    <p id="win-message">Has encontrado todas las palabras.</p>
+    <button id="back-to-menu-from-win">Volver al Menú</button>
+  </div>
+
+  <script>
+    // Configuración inicial
+    let rows = 15;
+    let cols = 15;
+    let words = [];
+    let matrix = [];
+    let wordPositions = {};
+    let foundWords = new Set();
+    let coins = 0;
+    let timeLeft = 60;
+    let timerInterval;
+    let isTimedMode = false;
+    let isBlindMode = false;
+    let timeAddedDisplayTimeout;
+
+    // Variables para selección
+    let isSelecting = false;
+    let startCell = null;
+    let selectedCells = [];
+
+    // Palabras según la dificultad
+    const difficultyWords = {
+      easy: ["CASA", "PERRO", "GATO", "ARBOL", "SOL"],
+      medium: ["CASA", "PERRO", "GATO", "ARBOL", "SOL", "AGUA", "FUTBOL", "LIBRO", "MUSICA", "PINTURA"],
+      hard: ["CASA", "PERRO", "GATO", "ARBOL", "SOL", "AGUA", "FUTBOL", "LIBRO", "MUSICA", "PINTURA", "CIENCIA", "TECNOLOGIA", "NATURALEZA", "DEPORTE", "COMIDA"]
+    };
+
+    // Direcciones posibles para colocar palabras
+    const directions = [
+      {x: 1, y: 0}, {x: -1, y: 0}, {x: 0, y: 1}, {x: 0, y: -1},
+      {x: 1, y: 1}, {x: -1, y: -1}, {x: 1, y: -1}, {x: -1, y: 1}
+    ];
+
+    // Función para generar matriz vacía
+    function createEmptyMatrix() {
+      matrix = new Array(rows);
+      for (let i = 0; i < rows; i++) {
+        matrix[i] = new Array(cols).fill('');
+      }
+    }
+
+    // Función para colocar palabra en la matriz
+    function placeWord(word) {
+      let placed = false;
+      let attempts = 0;
+      while (!placed && attempts < 100) {
+        attempts++;
+        let dir = directions[Math.floor(Math.random() * directions.length)];
+        let row = Math.floor(Math.random() * rows);
+        let col = Math.floor(Math.random() * cols);
+        let endRow = row + dir.y * (word.length - 1);
+        let endCol = col + dir.x * (word.length - 1);
+        if (endRow < 0 || endRow >= rows || endCol < 0 || endCol >= cols) continue;
+        let canPlace = true;
+        for (let i = 0; i < word.length; i++) {
+          let r = row + dir.y * i;
+          let c = col + dir.x * i;
+          if (matrix[r][c] !== '' && matrix[r][c] !== word[i]) {
+            canPlace = false;
+            break;
+          }
+        }
+        if (!canPlace) continue;
+        for (let i = 0; i < word.length; i++) {
+          let r = row + dir.y * i;
+          let c = col + dir.x * i;
+          matrix[r][c] = word[i];
+        }
+        wordPositions[word] = { start: { r: row, c: col }, direction: dir, length: word.length };
+        placed = true;
+      }
+      if (!placed) {
+        console.warn("No se pudo colocar la palabra:", word);
+      }
+    }
+
+    // Función para llenar espacios vacíos con letras aleatorias
+    function fillEmptySpaces() {
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (matrix[r][c] === '') {
+            matrix[r][c] = letters.charAt(Math.floor(Math.random() * letters.length));
+          }
+        }
+      }
+    }
+
+    // Función para renderizar la cuadrícula
+    function renderGrid() {
+      const grid = document.getElementById("grid");
+      grid.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
+      grid.style.gridTemplateRows = `repeat(${rows}, 30px)`;
+      grid.innerHTML = "";
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          cell.textContent = matrix[r][c];
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          grid.appendChild(cell);
+        }
+      }
+      addCellEventListeners();
+    }
+
+    // Función para añadir event listeners a las celdas
+    function addCellEventListeners() {
+      document.querySelectorAll(".cell").forEach(cell => {
+        cell.onmousedown = e => {
+          if (cell.classList.contains("found")) return;
+          isSelecting = true;
+          startCell = cell;
+          selectedCells = [cell];
+          selectCells(selectedCells);
+        };
+        cell.onmouseenter = e => {
+          if (!isSelecting || !startCell || cell.classList.contains("found")) return;
+          const newSelection = getCellsBetween(startCell, cell);
+          if (newSelection.length > 0) {
+            selectedCells = newSelection;
+            selectCells(selectedCells);
+          }
+        };
+        cell.onmouseup = e => {
+          if (!isSelecting) return;
+          isSelecting = false;
+          const found = checkSelectedWord(selectedCells);
+          if (found) {
+            markWordFound(found);
+          } else {
+            clearSelection();
+          }
+          startCell = null;
+          selectedCells = [];
+        };
+      });
+      document.body.onmouseup = () => {
+        if (isSelecting) {
+          isSelecting = false;
+          clearSelection();
+          startCell = null;
+          selectedCells = [];
+        }
+      };
+    }
+
+    // Función para renderizar la lista de palabras
+    function renderWordList() {
+      const ul = document.getElementById("word-list");
+      ul.innerHTML = "";
+      words.forEach(word => {
+        const li = document.createElement("li");
+        li.textContent = word;
+        if (foundWords.has(word)) {
+          li.classList.add("found");
+        }
+        ul.appendChild(li);
+      });
+    }
+
+    // Función para actualizar el contador de monedas
+    function updateCoinCount() {
+      document.getElementById("coin-count").textContent = coins;
+    }
+
+    // Función para actualizar el temporizador
+    function updateTimer() {
+      document.getElementById("timer-display").textContent = timeLeft;
+    }
+
+    // Función para mostrar tiempo añadido
+    function showTimeAdded(seconds) {
+      const timeAddedElement = document.getElementById("time-added");
+      timeAddedElement.textContent = `+${seconds}`;
+      clearTimeout(timeAddedDisplayTimeout);
+      timeAddedDisplayTimeout = setTimeout(() => {
+        timeAddedElement.textContent = '';
+      }, 1000);
+    }
+
+    // Función para obtener celda por fila y columna
+    function getCell(row, col) {
+      return document.querySelector(`.cell[data-row='${row}'][data-col='${col}']`);
+    }
+
+    // Función para verificar si la selección de celdas forma una palabra válida
+    function checkSelectedWord(cells) {
+      if (cells.length === 0) return null;
+      const letters = cells.map(c => c.textContent).join("");
+      for (const word of words) {
+        if (foundWords.has(word)) continue;
+        if (letters === word || letters === word.split("").reverse().join("")) {
+          return word;
+        }
+      }
+      return null;
+    }
+
+    // Función para seleccionar celdas
+    function selectCells(cells) {
+      clearSelection();
+      cells.forEach(cell => cell.classList.add("selected"));
+    }
+
+    // Función para limpiar la selección actual
+    function clearSelection() {
+      document.querySelectorAll(".cell.selected").forEach(cell => cell.classList.remove("selected"));
+    }
+
+    // Función para marcar palabra como encontrada
+    function markWordFound(word) {
+      foundWords.add(word);
+      coins += 5;
+      updateCoinCount();
+      if (isTimedMode) {
+        timeLeft += 5;
+        showTimeAdded(5);
+        updateTimer();
+      }
+      const pos = wordPositions[word];
+      if (!pos) return;
+      let { start, direction, length } = pos;
+      for (let i = 0; i < length; i++) {
+        const r = start.r + direction.y * i;
+        const c = start.c + direction.x * i;
+        const cell = getCell(r, c);
+        if (cell) {
+          cell.classList.remove("selected");
+          cell.classList.add("found");
+        }
+      }
+      renderWordList();
+      checkGameEnd();
+    }
+
+    // Función para revelar una letra de una palabra no encontrada
+    function revealLetter() {
+      if (coins < 10) {
+        alert("No tienes suficientes monedas para usar este poder.");
+        return;
+      }
+      coins -= 10;
+      updateCoinCount();
+      const unfoundWords = words.filter(word => !foundWords.has(word));
+      if (unfoundWords.length === 0) return;
+      const randomWord = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
+      const pos = wordPositions[randomWord];
+      if (!pos) return;
+      const { start, direction, length } = pos;
+      const randomIndex = Math.floor(Math.random() * length);
+      const r = start.r + direction.y * randomIndex;
+      const c = start.c + direction.x * randomIndex;
+      const cell = getCell(r, c);
+      if (cell) {
+        cell.classList.add("found");
+      }
+    }
+
+    // Función para dar una pista de palabra
+    function giveHint() {
+      if (coins < 15) {
+        alert("No tienes suficientes monedas para usar este poder.");
+        return;
+      }
+      coins -= 15;
+      updateCoinCount();
+      const unfoundWords = words.filter(word => !foundWords.has(word));
+      if (unfoundWords.length === 0) return;
+      const randomWord = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
+      alert(`Pista: La palabra "${randomWord}" está en la sopa de letras.`);
+    }
+
+    // Función para obtener celdas entre dos celdas en línea recta
+    function getCellsBetween(start, end) {
+      let cells = [];
+      const r1 = parseInt(start.dataset.row);
+      const c1 = parseInt(start.dataset.col);
+      const r2 = parseInt(end.dataset.row);
+      const c2 = parseInt(end.dataset.col);
+      const dr = r2 - r1;
+      const dc = c2 - c1;
+      const length = Math.max(Math.abs(dr), Math.abs(dc));
+      const stepR = dr === 0 ? 0 : dr / length;
+      const stepC = dc === 0 ? 0 : dc / length;
+      if (!Number.isInteger(stepR) || !Number.isInteger(stepC)) {
+        return [];
+      }
+      for (let i = 0; i <= length; i++) {
+        const r = r1 + stepR * i;
+        const c = c1 + stepC * i;
+        const cell = getCell(r, c);
+        if (cell) cells.push(cell);
+      }
+      return cells;
+    }
+
+    // Función para verificar el final del juego
+    function checkGameEnd() {
+      if (foundWords.size === words.length) {
+        clearInterval(timerInterval);
+        if (isTimedMode) {
+          document.getElementById("game-screen").style.display = "none";
+          document.getElementById("next-sopa-screen").style.display = "block";
+          setTimeout(() => {
+            document.getElementById("next-sopa-screen").style.display = "none";
+            initGame(rows === 10 ? 'easy' : rows === 15 ? 'medium' : 'hard', isTimedMode, isBlindMode);
+            document.getElementById("game-screen").style.display = "block";
+          }, 2000);
+        } else {
+          document.getElementById("game-screen").style.display = "none";
+          document.getElementById("win-screen").style.display = "block";
+        }
+      }
+    }
+
+    // Función para iniciar el juego
+    function initGame(difficulty, timedMode = false, blindMode = false) {
+      clearInterval(timerInterval);
+      isTimedMode = timedMode;
+      isBlindMode = blindMode;
+      foundWords.clear();
+      coins = 0;
+      timeLeft = 60;
+      updateCoinCount();
+      updateTimer();
+      document.getElementById("message").textContent = "";
+      document.getElementById("time-added").textContent = "";
+      switch (difficulty) {
+        case 'easy':
+          rows = 10;
+          cols = 10;
+          words = [...difficultyWords.easy];
+          break;
+        case 'medium':
+          rows = 15;
+          cols = 15;
+          words = [...difficultyWords.medium];
+          break;
+        case 'hard':
+          rows = 20;
+          cols = 20;
+          words = [...difficultyWords.hard];
+          break;
+      }
+      createEmptyMatrix();
+      words.forEach(word => placeWord(word));
+      fillEmptySpaces();
+      renderWordList();
+      if (isBlindMode) {
+        document.getElementById("grid").style.display = "none";
+        document.getElementById("powers").style.display = "none";
+        document.getElementById("resetBtn").style.display = "none";
+        document.getElementById("back-to-menu").style.display = "none";
+        setTimeout(() => {
+          document.getElementById("grid").style.display = "grid";
+          document.getElementById("words").style.display = "none";
+          document.getElementById("powers").style.display = "flex";
+          document.getElementById("resetBtn").style.display = "block";
+          document.getElementById("back-to-menu").style.display = "block";
+        }, 5000);
+      } else {
+        document.getElementById("words").style.display = "block";
+        document.getElementById("grid").style.display = "grid";
+        document.getElementById("powers").style.display = "flex";
+        document.getElementById("resetBtn").style.display = "block";
+        document.getElementById("back-to-menu").style.display = "block";
+      }
+      if (isTimedMode) {
+        document.getElementById("timer").style.display = "block";
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          updateTimer();
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("¡Tiempo agotado!");
+            document.getElementById("start-screen").style.display = "block";
+            document.getElementById("game-screen").style.display = "none";
+          }
+        }, 1000);
+      } else {
+        document.getElementById("timer").style.display = "none";
+      }
+      renderGrid();
+    }
+
+    // Event listeners para los botones de inicio
+    document.getElementById("easyBtn").onclick = () => {
+      document.getElementById("start-screen").style.display = "none";
+      document.getElementById("game-screen").style.display = "block";
+      initGame('easy');
+    };
+
+    document.getElementById("mediumBtn").onclick = () => {
+      document.getElementById("start-screen").style.display = "none";
+      document.getElementById("game-screen").style.display = "block";
+      initGame('medium');
+    };
+
+    document.getElementById("hardBtn").onclick = () => {
+      document.getElementById("start-screen").style.display = "none";
+      document.getElementById("game-screen").style.display = "block";
+      initGame('hard');
+    };
+
+    document.getElementById("timedModeBtn").onclick = () => {
+      document.getElementById("start-screen").style.display = "none";
+      document.getElementById("game-screen").style.display = "block";
+      initGame('medium', true);
+    };
+
+    document.getElementById("blindModeBtn").onclick = () => {
+      document.getElementById("start-screen").style.display = "none";
+      document.getElementById("game-screen").style.display = "block";
+      initGame('medium', false, true);
+    };
+
+    // Event listeners para los botones de poderes y reinicio
+    document.getElementById("resetBtn").onclick = () => {
+      initGame(rows === 10 ? 'easy' : rows === 15 ? 'medium' : 'hard', isTimedMode, isBlindMode);
+    };
+
+    document.getElementById("revealLetterBtn").onclick = () => {
+      revealLetter();
+    };
+
+    document.getElementById("hintBtn").onclick = () => {
+      giveHint();
+    };
+
+    document.getElementById("back-to-menu").onclick = () => {
+      clearInterval(timerInterval);
+      document.getElementById("start-screen").style.display = "block";
+      document.getElementById("game-screen").style.display = "none";
+    };
+
+    document.getElementById("back-to-menu-from-win").onclick = () => {
+      document.getElementById("start-screen").style.display = "block";
+      document.getElementById("win-screen").style.display = "none";
+    };
+  </script>
+</body>
+</html>
